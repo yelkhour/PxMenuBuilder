@@ -23,6 +23,7 @@ namespace MenuBuilder
         private Dictionary<PxMenuItem, List<string>> _links = new Dictionary<PxMenuItem, List<string>>();
         private static log4net.ILog _logger4Net = log4net.LogManager.GetLogger(typeof(MenuBuilder));
         private string _rootPath;
+        private bool _sortByFolderName = false;
 
         public Func<PCAxis.Paxiom.PXMeta, string, string> SortOrder
         {
@@ -42,12 +43,13 @@ namespace MenuBuilder
         /// </summary>
         /// <param name="languages">Languages that the database structure will be created for</param>
         /// <param name="languagDependent">If only file with the specific language should be included in the menu</param>
-        public MenuBuilder(string[] languages, bool languageDependent, string defaultLanguage)
+        public MenuBuilder(string[] languages, bool languageDependent, string defaultLanguage, bool sortByFolderName)
         {
             _languages = languages;
             _languageDependent = languageDependent;
             _sortOrder = (meta, path) => System.IO.Path.GetFileName(path);
             _defaultLanguage = defaultLanguage;
+            _sortByFolderName = sortByFolderName;
         }
 
         #region IMenuBuilder Members
@@ -64,6 +66,7 @@ namespace MenuBuilder
             _rootPath = System.IO.Path.GetDirectoryName(path) + "\\";
             _databaseName = System.IO.Path.GetFileName(path);
             _logger(new DatabaseMessage() { MessageType = DatabaseMessage.BuilderMessageType.Information, Message = "Menu build started " + DateTime.Now.ToString() });
+            
             string folderName = System.IO.Path.GetFileNameWithoutExtension(path);
             foreach (var language in _languages)
             {
@@ -158,7 +161,9 @@ namespace MenuBuilder
                 if (Array.IndexOf(_languages, alias.Language) >= 0)
                 {
                     _currentItems[alias.Language].Text = alias.Alias;
-                    _currentItems[alias.Language].SortCode = alias.Alias;
+                    if(_sortByFolderName == false) {
+                        _currentItems[alias.Language].SortCode = alias.Alias;
+                    }
                 }
             }
             else if (item is LinkItem)
